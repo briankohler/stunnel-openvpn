@@ -41,6 +41,8 @@ server_https_ports="tcp/443"
 client_https_ports="tcp/443"
 server_openvpn_ports="tcp/8443"
 client_openvpn_ports="tcp/8443"
+server_stunnel_ports="tcp/9200"
+client_stunnel_ports="tcp/9200"
 server_dns_ports="tcp/53,udp/53"
 
        class arp
@@ -74,6 +76,10 @@ server_dns_ports="tcp/53,udp/53"
        class openvpn
         server openvpn
 	client openvpn
+
+       class stunnel
+        server stunnel
+	client stunnel
 
        class netdata
         server netdata
