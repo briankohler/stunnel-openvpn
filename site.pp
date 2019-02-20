@@ -17,13 +17,13 @@ node default {
     province     => 'NA',
     city         => 'NA',
     organization => 'NA',
-    sndbuf       => '393216',
-    rcvbuf       => '393216',
+    sndbuf       => 393216,
+    rcvbuf       => 393216,
     email        => 'admin@na.local',
     server       => '10.174.64.0 255.255.224.0',
     status_log   => '/var/log/openvpn-status.log',
     tcp_nodelay  => true,
-    port         => 8443,
+    port         => '8443',
     proto        => tcp,
     push         => ['sndbuf 393216','rcvbuf 393216',
                       'route ENDPOINT 255.255.255.255 GW 1',
@@ -47,7 +47,7 @@ node default {
 
   ~> dnsmasq::conf { 'server':
     ensure  => present,
-    content => 'server=8.8.8.8'
+    content => 'server=1.1.1.1'
   }
 
   ~> dnsmasq::conf { 'interface_tun0':
@@ -58,7 +58,7 @@ node default {
   -> openvpn::client { 'admin':
     server      => 'openvpn',
     remote_host => 'localhost',
-    port        => 2200,
+    port        => '2200',
     proto       => tcp,
   }
 

@@ -36,6 +36,8 @@ echo "Provisioning proxy..."
 terraform init
 terraform apply -auto-approve -var do_token=$DO_TOKEN -var public_ip="$PUBLIC_IP" -var gateway="$(netstat -anr | grep default | head -n1 | awk '{print $2}')"
 echo "Proxy instance provisioned"
-echo "Opening NetData in browser"
-open "http://10.174.64.1:19999/#menu_tc_submenu_eth0;theme=slate;help=false"
-
+echo "here is your config"
+cat /tmp/proxy.ovpn
+echo "starting stunnel" 
+stunnel stunnel.conf
+echo "import your config to tunnelblick or any openvpn-compliant client to connect"

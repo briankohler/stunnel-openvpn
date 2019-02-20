@@ -14,7 +14,7 @@ resource "digitalocean_ssh_key" "default" {
 resource "digitalocean_droplet" "proxy" {
   image  = "centos-7-x64"
   name   = "proxy"
-  region = "sfo1"
+  region = "sfo2"
   size   = "512mb"
   ssh_keys = ["${digitalocean_ssh_key.default.id}"]
   user_data = "${file("${path.module}/userdata.sh")}"
@@ -39,7 +39,6 @@ data "template_file" "stunnel_conf" {
   template = <<EOF
 pid = ${path.module}/stunnel.pid
 cert = ${path.module}/stunnel.pem
-compression = deflate
 client = yes
 [openvpn]
 accept = 0.0.0.0:2200
@@ -99,22 +98,16 @@ resource "digitalocean_firewall" "proxy" {
   }
 }
 
-resource "null_resource" "start_stunnel" {
-  depends_on = ["digitalocean_firewall.proxy"]
-  provisioner "local-exec" {
-    command = "stunnel ${path.module}/stunnel.conf"
-  }
-}
 
 resource "null_resource" "import_ovpn" {
-  depends_on = ["null_resource.start_stunnel"]
+  depends_on = ["digitalocean_firewall.proxy"]
 
   #triggers {
   #  instances = "${digital.openvpn.instance_ids}"
   #}
 
   provisioner "local-exec" {
-    command = "while true; do curl -s ${digitalocean_droplet.proxy.ipv4_address}:8188 > /tmp/_proxy.ovpn; if [ $? -eq 0 ] && [ $(cat /tmp/_proxy.ovpn | wc -l) -gt 1 ]; then break 3; fi; sleep 3; done; cat /tmp/_proxy.ovpn; cat /tmp/_proxy.ovpn > /tmp/proxy.ovpn; open /tmp/proxy.ovpn; sleep 10; osascript tunnelblick.scpt;"
+    command = "while true; do curl -s ${digitalocean_droplet.proxy.ipv4_address}:8188 > /tmp/_proxy.ovpn; if [ $? -eq 0 ] && [ $(cat /tmp/_proxy.ovpn | wc -l) -gt 1 ]; then break 3; fi; sleep 3; done; cat /tmp/_proxy.ovpn; cat /tmp/_proxy.ovpn > /tmp/proxy.ovpn;"
   }
 }
 

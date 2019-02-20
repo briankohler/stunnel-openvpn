@@ -6,21 +6,20 @@ cat /etc/systemd/system.conf | sed -e 's|^#Default\(.*\)Accounting=.*$|Default\1
 mv /tmp/system.conf /etc/systemd/system.conf
 systemctl daemon-reexec
 yum install -y epel-release
-yum install -y http://yum.puppetlabs.com/puppetlabs-release-el-7.noarch.rpm
+yum install -y http://yum.puppetlabs.com/puppet5/puppet5-release-el-7.noarch.rpm
 yum install -y dnsmasq openvpn easy-rsa stunnel nmap-ncat net-tools haveged puppet ruby ruby-devel git
-gem install librarian-puppet --no-ri --no-rdoc
+/opt/puppetlabs/puppet/bin/gem install librarian-puppet --no-ri --no-rdoc
 while [ ! -f /etc/site.pp ]
 do
   echo "Waiting"
   sleep 2
 done
-mv /etc/Puppetfile /etc/puppet/
-mv /etc/site.pp /etc/puppet/
-cd /etc/puppet
-HOME=/root librarian-puppet update 
+mv /etc/Puppetfile /etc/puppetlabs/puppet/
+mv /etc/site.pp /etc/puppetlabs/puppet/
+cd /etc/puppetlabs/puppet
+HOME=/root PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/root/bin /opt/puppetlabs/puppet/bin/librarian-puppet install
 echo "pid = /var/run/stunnel.pid" > /etc/stunnel/stunnel.conf
 echo "cert = /etc/stunnel.pem" >> /etc/stunnel/stunnel.conf
-echo "compression = deflate" >> /etc/stunnel/stunnel.conf
 echo "[ssh]" >> /etc/stunnel/stunnel.conf
 echo "accept = 0.0.0.0:443" >> /etc/stunnel/stunnel.conf
 echo "connect = $(hostname -I | awk '{print $1}'):8443" >> /etc/stunnel/stunnel.conf
@@ -28,7 +27,7 @@ echo "retry = yes" >> /etc/stunnel/stunnel.conf
 echo "sslVersion = TLSv1.2" >> /etc/stunnel/stunnel.conf
 echo "ENABLED=1" > /etc/default/stunnel
 echo "FILES=/etc/stunnel/*.conf" >> /etc/default/stunnel
-puppet apply site.pp --debug --verbose
+/opt/puppetlabs/puppet/bin/puppet apply site.pp --modulepath=/etc/puppetlabs/puppet/modules --debug --verbose
 yum install -y /etc/*.rpm
 
 cat > /etc/firehol/fireqos.conf << END
