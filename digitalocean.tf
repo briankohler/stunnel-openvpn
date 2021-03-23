@@ -1,5 +1,6 @@
 variable "do_token" {}
 provider "digitalocean" {
+  version = "1.21.0"
   token = "${var.do_token}"
 }
 
@@ -11,11 +12,15 @@ resource "digitalocean_ssh_key" "default" {
   public_key = "${file("${path.module}/id_rsa.pub")}"
 }
 
+data "digitalocean_image" "available" {
+  slug = "centos-7-x64"
+}
+
 resource "digitalocean_droplet" "proxy" {
-  image  = "centos-7-x64"
-  name   = "proxy"
-  region = "sfo2"
-  size   = "512mb"
+  image  = "${data.digitalocean_image.available.id}"
+  name   = "ovpn-${replace(var.public_ip, ".", "-")}"
+  region = "nyc3"
+  size  = "s-1vcpu-1gb"
   ssh_keys = ["${digitalocean_ssh_key.default.id}"]
   user_data = "${file("${path.module}/userdata.sh")}"
 }
@@ -33,29 +38,9 @@ resource "null_resource" "replace_endpoint" {
 }
 
 
-data "template_file" "stunnel_conf" {
-  depends_on = ["null_resource.replace_endpoint"]
-
-  template = <<EOF
-pid = ${path.module}/stunnel.pid
-cert = ${path.module}/stunnel.pem
-client = yes
-[openvpn]
-accept = 0.0.0.0:2200
-connect = ${digitalocean_droplet.proxy.ipv4_address}:443
-retry = yes
-sslVersion = TLSv1.2
-EOF
-}
-
-resource "local_file" "stunnel_conf" {
-  content = "${data.template_file.stunnel_conf.rendered}"
-  filename = "${path.module}/stunnel.conf"
-}
-
 resource "digitalocean_firewall" "proxy" {
-  name = "only-22"
-  depends_on  = ["null_resource.replace_endpoint","local_file.stunnel_conf"]
+  name = "proxy-ipacl-${digitalocean_droplet.proxy.ipv4_address}"
+  depends_on  = ["null_resource.replace_endpoint"]
 
   droplet_ids = ["${digitalocean_droplet.proxy.id}"]
 

@@ -7,7 +7,7 @@ mv /tmp/system.conf /etc/systemd/system.conf
 systemctl daemon-reexec
 yum install -y epel-release
 yum install -y http://yum.puppetlabs.com/puppet5/puppet5-release-el-7.noarch.rpm
-yum install -y dnsmasq openvpn easy-rsa stunnel nmap-ncat net-tools haveged puppet ruby ruby-devel git
+yum install -y dnsmasq openvpn easy-rsa nmap-ncat net-tools haveged puppet ruby ruby-devel git
 /opt/puppetlabs/puppet/bin/gem install librarian-puppet --no-ri --no-rdoc
 while [ ! -f /etc/site.pp ]
 do
@@ -18,15 +18,6 @@ mv /etc/Puppetfile /etc/puppetlabs/puppet/
 mv /etc/site.pp /etc/puppetlabs/puppet/
 cd /etc/puppetlabs/puppet
 HOME=/root PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/puppetlabs/bin:/root/bin /opt/puppetlabs/puppet/bin/librarian-puppet install
-echo "pid = /var/run/stunnel.pid" > /etc/stunnel/stunnel.conf
-echo "cert = /etc/stunnel.pem" >> /etc/stunnel/stunnel.conf
-echo "[ssh]" >> /etc/stunnel/stunnel.conf
-echo "accept = 0.0.0.0:443" >> /etc/stunnel/stunnel.conf
-echo "connect = $(hostname -I | awk '{print $1}'):8443" >> /etc/stunnel/stunnel.conf
-echo "retry = yes" >> /etc/stunnel/stunnel.conf
-echo "sslVersion = TLSv1.2" >> /etc/stunnel/stunnel.conf
-echo "ENABLED=1" > /etc/default/stunnel
-echo "FILES=/etc/stunnel/*.conf" >> /etc/default/stunnel
 /opt/puppetlabs/puppet/bin/puppet apply site.pp --modulepath=/etc/puppetlabs/puppet/modules --debug --verbose
 yum install -y /etc/*.rpm
 
@@ -38,10 +29,8 @@ server_http_ports="tcp/80"
 client_http_ports="tcp/80"
 server_https_ports="tcp/443"
 client_https_ports="tcp/443"
-server_openvpn_ports="tcp/8443"
-client_openvpn_ports="tcp/8443"
-server_stunnel_ports="tcp/9200"
-client_stunnel_ports="tcp/9200"
+server_openvpn_ports="tcp/443"
+client_openvpn_ports="tcp/443"
 server_dns_ports="tcp/53,udp/53"
 
        class arp
@@ -75,10 +64,6 @@ server_dns_ports="tcp/53,udp/53"
        class openvpn
         server openvpn
 	client openvpn
-
-       class stunnel
-        server stunnel
-	client stunnel
 
        class netdata
         server netdata

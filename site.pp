@@ -23,7 +23,7 @@ node default {
     server       => '10.174.64.0 255.255.224.0',
     status_log   => '/var/log/openvpn-status.log',
     tcp_nodelay  => true,
-    port         => '8443',
+    port         => '443',
     proto        => tcp,
     push         => ['sndbuf 393216','rcvbuf 393216',
                       'route ENDPOINT 255.255.255.255 GW 1',
@@ -57,14 +57,9 @@ node default {
 
   -> openvpn::client { 'admin':
     server      => 'openvpn',
-    remote_host => 'localhost',
-    port        => '2200',
+    remote_host => "${::ipaddress_eth0}",
+    port        => '443',
     proto       => tcp,
-  }
-
-  ~> exec { 'start_stunnel':
-    command     => '/usr/bin/stunnel /etc/stunnel/stunnel.conf',
-    refreshonly => true,
   }
 
   ~> exec { 'start_nc_listener':

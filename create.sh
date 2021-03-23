@@ -11,7 +11,7 @@ then
   rm terraform_0.11.1_darwin_amd64.zip
 fi
 
-brew install gsed stunnel jq > /dev/null 2>&1
+brew install gsed jq > /dev/null 2>&1
 echo "Prerequisites installed"
 if [ -z "${DO_TOKEN}" ]
 then
@@ -25,19 +25,12 @@ echo "Creating SSH key..."
 rm -f id_rsa*
 ssh-keygen -f id_rsa -t rsa -N "" > /dev/null 2>&1
 chmod 400 id_rsa
-echo "Generating SSL cert/key..."
-openssl req -new -x509 -sha256 -nodes -newkey rsa:2048 -days 365 -keyout stunnel.key -out stunnel.crt -subj "/C=NA/ST=NA/L=NA/O=None/OU=None/CN=none.com" > /dev/null 2>&1
-cat stunnel.crt stunnel.key > stunnel.pem
-cp stunnel.pem puppet/
-rm stunnel.crt stunnel.key
 
 echo "Provisioning proxy..."
 
 terraform init
 terraform apply -auto-approve -var do_token=$DO_TOKEN -var public_ip="$PUBLIC_IP" -var gateway="$(netstat -anr | grep default | head -n1 | awk '{print $2}')"
 echo "Proxy instance provisioned"
-echo "here is your config"
-cat /tmp/proxy.ovpn
-echo "starting stunnel" 
-stunnel stunnel.conf
+echo "Your config is saved to client.ovpn"
+cat /tmp/proxy.ovpn > client.ovpn
 echo "import your config to tunnelblick or any openvpn-compliant client to connect"
